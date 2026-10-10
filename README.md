@@ -28,8 +28,6 @@ cd U-AFS-Scheduler
 Reproducing the Plots
 If you only wish to view how the data was analyzed without re-running the entire simulation, you can use the provided CSV and JSON files.
  * Navigate to the scripts directory.
- * Run the plotting script:
-   python scripts/generate_plots.py --input ../data/results.csv --output ../plots/
-
+ * to get plots, csv, json files check **extra_results.zip**
 License
 This project is licensed under the MIT License - see the LICENSE file for details.
