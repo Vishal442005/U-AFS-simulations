@@ -14,7 +14,7 @@ To run the simulations and analysis scripts locally, ensure your environment (su
  * Network Simulator (e.g., ns-3) configured and built in your system.
 How to Run the Simulations
  * Clone the repository:
-   git clone https://github.com/your-username/U-AFS-Scheduler.git
+   git clone https://github.com/Vishal442005/U-AFS-Scheduler.git
 cd U-AFS-Scheduler
 
  * Execute the simulation:
