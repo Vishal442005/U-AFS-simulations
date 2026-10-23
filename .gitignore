@@ -32,3 +32,6 @@ htmlcov/
 .venv/
 env/
 venv/
+
+wifi_scheduler_research/
+wifi_publication_computer_communication/
