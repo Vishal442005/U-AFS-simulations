@@ -1,0 +1,24 @@
+{
+  "title": "U-AFS: Urgency-Aware Fair Scheduler for Mixed Real-Time and Background Traffic in Wi-Fi Networks",
+  "description": "Simulation framework, test suites, and empirical evaluation data for U-AFS (Urgency-Aware Fair Scheduling) in 802.11 Wi-Fi networks. Includes implementations of U-AFS, IEEE 802.11e EDCA baseline, Deficit Round-Robin (DRR), Earliest Deadline First (EDF), Round-Robin (RR), SPSA parameter auto-tuning, closed-loop TCP dynamics, OBSS interference modeling, and ns-3 CSMA/CA MAC/PHY validation.",
+  "creators": [
+    {
+      "name": "Chandel, Vishal",
+      "affiliation": "Jawaharlal Nehru Government Engineering College (JNGEC), Sundernagar, India",
+      "orcid": "0009-0006-0552-8551"
+    }
+  ],
+  "keywords": [
+    "Wi-Fi scheduling",
+    "IEEE 802.11e EDCA",
+    "Deadline-aware scheduling",
+    "Fair queueing",
+    "Deficit Round-Robin",
+    "SPSA parameter auto-tuning",
+    "TCP Reno dynamics",
+    "OBSS interference",
+    "ns-3 network simulation"
+  ],
+  "license": "MIT",
+  "upload_type": "software"
+}

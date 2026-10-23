@@ -1,0 +1,34 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Strict exclusions per author policy: No papers, docx, pdfs, or paper generation scripts
+*.docx
+*.doc
+*.pdf
+*.zip
+*.tar.gz
+*.txt
+!requirements.txt
+
+# Exclude paper generation scripts
+generate_paper.py
+generate_extensions_docx.py
+compile_latex*.py
+extract_data.py
+extracted_data.json
+
+# Exclude external reference papers
+tnet_related_papers/
+references/
+
+# Caches and environments
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+.env
+.venv/
+env/
+venv/
