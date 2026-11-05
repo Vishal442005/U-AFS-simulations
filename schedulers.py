@@ -33,9 +33,23 @@ class Policy(str, Enum):
     NO_FAIRNESS = "no_fairness"
     NO_RETRY_ESTIMATE = "no_retry_estimate"
     EDCA = "edca"
+    LSDSF = "lsdsf"
+    LYAPUNOV = "lyapunov"
 
 
-POLICY_NAMES = tuple(policy.value for policy in Policy)
+CORE_POLICY_NAMES = (
+    "round_robin",
+    "edf",
+    "service_drr",
+    "proposed",
+    "no_urgency",
+    "no_fairness",
+    "no_retry_estimate",
+    "edca",
+)
+MODERN_POLICY_NAMES = ("lsdsf", "lyapunov")
+POLICY_NAMES = CORE_POLICY_NAMES
+ALL_POLICY_NAMES = tuple(policy.value for policy in Policy)
 
 
 @dataclass(frozen=True)
@@ -153,6 +167,7 @@ class Scheduler:
 
         self._credit = [0.0] * n
         self._drr_credit = [0.0] * n
+        self._lyapunov_delay_queue = [0.0] * n
 
         # Separate estimates for each station and traffic class.
         self._service_ratio: Dict[Tuple[int, str], float] = {}
@@ -326,6 +341,77 @@ class Scheduler:
             ),
         )
 
+    def _lsdsf(
+        self,
+        now_s: float,
+        candidates: Sequence[Candidate],
+    ) -> Candidate:
+        """LSDSF (Jain et al., 2024 / ACM MobiHoc): Local Search Deadline Scheduler with Fairness.
+
+        Prioritizes frames by profit-to-slack ratio normalized by service,
+        discounted by station credit.
+        """
+        best_candidate = None
+        best_key = None
+
+        for packet in candidates:
+            service_est = self.estimate(packet)
+            if packet.traffic_class == "rt":
+                slack = packet.deadline_s - now_s - service_est
+                profit = 1.0
+                urgency = profit / max(slack, 1e-4)
+            else:
+                profit = 0.20
+                urgency = profit / max(service_est, 1e-4)
+
+            fairness_term = self.config.fairness_weight * (
+                self._credit[packet.station] / self.config.quantum_s
+            )
+            score = urgency - fairness_term
+
+            key = (-score, packet.arrival_s, packet.packet_id)
+            if best_key is None or key < best_key:
+                best_key = key
+                best_candidate = packet
+
+        return best_candidate
+
+    def _lyapunov(
+        self,
+        now_s: float,
+        candidates: Sequence[Candidate],
+    ) -> Candidate:
+        """Lyapunov Delay-Bounded Scheduler (Zhang et al., 2024).
+
+        Balances physical throughput weight V and virtual delay violation queues.
+        """
+        V = 0.05
+        best_candidate = None
+        best_key = None
+
+        for packet in candidates:
+            service_est = self.estimate(packet)
+            rate_weight = 1.0 / max(service_est, 1e-4)
+
+            if packet.traffic_class == "rt":
+                slack = packet.deadline_s - now_s - service_est
+                delay_penalty = (
+                    1.0 / max(slack, 1e-4) if slack > 0 else 1000.0
+                )
+                score = (
+                    V * rate_weight
+                    + self._lyapunov_delay_queue[packet.station] * delay_penalty
+                )
+            else:
+                score = V * rate_weight
+
+            key = (-score, packet.arrival_s, packet.packet_id)
+            if best_key is None or key < best_key:
+                best_key = key
+                best_candidate = packet
+
+        return best_candidate
+
     def _proposed_family(
         self,
         now_s: float,
@@ -448,6 +534,12 @@ class Scheduler:
         elif self.policy == Policy.EDCA:
             selected = self._edca(candidates)
 
+        elif self.policy == Policy.LSDSF:
+            selected = self._lsdsf(now_s, candidates)
+
+        elif self.policy == Policy.LYAPUNOV:
+            selected = self._lyapunov(now_s, candidates)
+
         else:
             selected = self._proposed_family(now_s, candidates)
 
@@ -494,6 +586,24 @@ class Scheduler:
 
         self._credit[packet.station] -= measured_service_s
         self._drr_credit[packet.station] -= measured_service_s
+
+        if (
+            self.policy == Policy.LYAPUNOV
+            and packet.traffic_class == "rt"
+            and packet.deadline_s is not None
+        ):
+            delay_violation = (
+                1.0
+                if (self._pending_start + measured_service_s > packet.deadline_s)
+                else 0.0
+            )
+            epsilon = 0.05
+            self._lyapunov_delay_queue[packet.station] = max(
+                0.0,
+                self._lyapunov_delay_queue[packet.station]
+                + delay_violation
+                - epsilon,
+            )
 
         if self._pending_background:
             self._background_debt += (

@@ -7,20 +7,48 @@ __pycache__/
 *.docx
 *.doc
 *.pdf
+!figures/**/*.pdf
+*.tex
 *.zip
 *.tar.gz
 *.txt
 !requirements.txt
 
-# Exclude paper generation scripts
+# Exclude paper generation scripts and builders
 generate_paper.py
 generate_extensions_docx.py
 compile_latex*.py
 extract_data.py
 extracted_data.json
+build_*.py
+*paper*.py
+*docx*.py
+*pptx*.py
+*latex*.py
+*diagram*.py
+*visual*.py
+*plot*.py
+*inspect*.py
+*verify*.py
+*.json
+*.pptx
+tighten_*.py
+add_*.py
+format_*.py
+sync_*.py
+dump_*.py
+check_*.py
+polish_*.py
+render_*.py
+run_*.py
+*simulator*.py
+test_*.py
+update_*.py
+*fonts*.py
 
 # Exclude external reference papers
 tnet_related_papers/
+related_papers_2021_2026/
 references/
 
 # Caches and environments
@@ -35,3 +63,16 @@ venv/
 
 wifi_scheduler_research/
 wifi_publication_computer_communication/
+
+latex/
+patch_*.py
+
+apply_*.py
+audit_*.py
+generate_*.py
+query_*.py
+setup_*.py
+shorten_*.py
+refactor_*.py
+submission_tex/
+elseiver/

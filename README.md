@@ -114,7 +114,7 @@ If you use U-AFS in your research, please cite:
 ```bibtex
 @software{chandel2026uafs,
   author       = {Vishal Chandel},
-  title        = {U-AFS: Urgency-Aware Fair Scheduler for Mixed Real-Time and Background Traffic in Wi-Fi Networks},
+  title        = {U-AFS: Urgency-Aware Fair Scheduler for Mixed Real-Time and Best-Effort Traffic in IEEE 802.11 Wireless Networks},
   year         = {2026},
   publisher    = {GitHub},
   journal      = {GitHub repository},
