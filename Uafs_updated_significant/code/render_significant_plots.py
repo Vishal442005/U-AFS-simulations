@@ -316,27 +316,13 @@ def plot_fig6_pareto():
         
         ax.errorbar(x_val, y_val, xerr=x_err, yerr=y_err, fmt='none', ecolor=PALETTE[pol], capsize=3, zorder=zorder-1)
         ax.scatter(x_val, y_val, label=LABELS[pol], color=PALETTE[pol], marker=markers[pol], s=size, edgecolors="black", linewidths=0.9, zorder=zorder)
-        
-        # Offset label
-        offset_x = 1.5
-        offset_y = 0.2
-        if pol == "edf":
-            offset_x = -7.0
-            offset_y = -0.6
-        elif pol == "service_drr":
-            offset_x = -14.0
-            offset_y = 0.3
-        elif pol == "proposed":
-            offset_x = 1.8
-            offset_y = 0.3
-        ax.text(x_val + offset_x, y_val + offset_y, LABELS[pol], fontsize=8.5, fontweight="bold" if pol == "proposed" else "normal")
 
     # Invert x-axis concept: ideal point is (0% miss, high goodput)
     ax.set_xlabel("RT Deadline Miss Fraction (%) [Lower is Better $\\rightarrow$]")
     ax.set_ylabel("Background Goodput (Mbps) [Higher is Better $\\rightarrow$]")
     ax.set_title("Multi-Objective Pareto Frontier: Timeliness vs. Bulk Goodput")
-    ax.grid(True)
-    ax.legend(loc="upper right", framealpha=0.9, fontsize=9)
+    ax.grid(True, linestyle="--", alpha=0.5)
+    ax.legend(loc="upper right", framealpha=0.95, edgecolor="#CBD5E1", fontsize=9.5)
     
     # Annotate Pareto Optimal Region
     ax.axhspan(11.0, 16.0, 0.0, 0.25, color="green", alpha=0.08)
