@@ -76,3 +76,6 @@ shorten_*.py
 refactor_*.py
 submission_tex/
 elseiver/
+
+updated_submission/
+clean_*.py
