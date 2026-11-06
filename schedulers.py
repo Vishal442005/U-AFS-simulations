@@ -35,6 +35,8 @@ class Policy(str, Enum):
     EDCA = "edca"
     LSDSF = "lsdsf"
     LYAPUNOV = "lyapunov"
+    M_LWDF = "m_lwdf"
+    EXP_RULE = "exp_rule"
 
 
 CORE_POLICY_NAMES = (
@@ -47,7 +49,7 @@ CORE_POLICY_NAMES = (
     "no_retry_estimate",
     "edca",
 )
-MODERN_POLICY_NAMES = ("lsdsf", "lyapunov")
+MODERN_POLICY_NAMES = ("lsdsf", "lyapunov", "m_lwdf", "exp_rule")
 POLICY_NAMES = CORE_POLICY_NAMES
 ALL_POLICY_NAMES = tuple(policy.value for policy in Policy)
 
@@ -412,6 +414,74 @@ class Scheduler:
 
         return best_candidate
 
+    def _m_lwdf(
+        self,
+        now_s: float,
+        candidates: Sequence[Candidate],
+    ) -> Candidate:
+        """M-LWDF (Andrews et al.): Modified Largest Weighted Delay First.
+
+        Prioritizes frames based on waiting delay W_i, channel rate 1/S_i,
+        and target deadline weight 1/D_i.
+        """
+        best_candidate = None
+        best_score = -math.inf
+
+        for packet in candidates:
+            service_est = self.estimate(packet)
+            rate_weight = 1.0 / max(service_est, 1e-4)
+            wait_s = max(0.0, now_s - packet.arrival_s)
+
+            if packet.traffic_class == "rt":
+                rel_d = max(packet.deadline_s - packet.arrival_s if packet.deadline_s else 0.025, 1e-3)
+                deadline_weight = 1.0 / rel_d
+                score = deadline_weight * wait_s * rate_weight
+            else:
+                score = 0.20 * 40.0 * wait_s * rate_weight
+
+            if score > best_score:
+                best_score = score
+                best_candidate = packet
+
+        return best_candidate if best_candidate is not None else candidates[0]
+
+    def _exp_rule(
+        self,
+        now_s: float,
+        candidates: Sequence[Candidate],
+    ) -> Candidate:
+        """EXP-Rule (Shakkottai et al.): Exponential QoS Scheduler.
+
+        Accelerates priority exponentially as delay approaches deadline.
+        """
+        rt_waits = [
+            max(0.0, now_s - p.arrival_s)
+            for p in candidates
+            if p.traffic_class == "rt"
+        ]
+        mean_wait = sum(rt_waits) / len(rt_waits) if rt_waits else 0.010
+
+        best_candidate = None
+        best_score = -math.inf
+
+        for packet in candidates:
+            service_est = self.estimate(packet)
+            rate_weight = 1.0 / max(service_est, 1e-4)
+            wait_s = max(0.0, now_s - packet.arrival_s)
+
+            if packet.traffic_class == "rt":
+                rel_d = max(packet.deadline_s - packet.arrival_s if packet.deadline_s else 0.025, 1e-3)
+                exponent = min(50.0, (wait_s / rel_d) / (1.0 + math.sqrt(mean_wait)))
+                score = rate_weight * math.exp(exponent)
+            else:
+                score = 0.20 * rate_weight
+
+            if score > best_score:
+                best_score = score
+                best_candidate = packet
+
+        return best_candidate if best_candidate is not None else candidates[0]
+
     def _proposed_family(
         self,
         now_s: float,
@@ -539,6 +609,12 @@ class Scheduler:
 
         elif self.policy == Policy.LYAPUNOV:
             selected = self._lyapunov(now_s, candidates)
+
+        elif self.policy == Policy.M_LWDF:
+            selected = self._m_lwdf(now_s, candidates)
+
+        elif self.policy == Policy.EXP_RULE:
+            selected = self._exp_rule(now_s, candidates)
 
         else:
             selected = self._proposed_family(now_s, candidates)
