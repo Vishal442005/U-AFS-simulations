@@ -19,8 +19,9 @@ import numpy as np
 import pandas as pd
 from scipy.interpolate import griddata
 
-RESULTS_DIR = Path("Uafs_updated_significant/results")
-FIGS_DIR = Path("Uafs_updated_significant/figures")
+ROOT_DIR = Path(__file__).resolve().parent.parent.parent
+RESULTS_DIR = Path(__file__).resolve().parent.parent / "results"
+FIGS_DIR = Path(__file__).resolve().parent.parent / "figures"
 FIGS_DIR.mkdir(parents=True, exist_ok=True)
 
 # Styling palette
@@ -318,19 +319,30 @@ def plot_fig6_pareto():
         ax.scatter(x_val, y_val, label=LABELS[pol], color=PALETTE[pol], marker=markers[pol], s=size, edgecolors="black", linewidths=0.9, zorder=zorder)
 
     # Invert x-axis concept: ideal point is (0% miss, high goodput)
-    ax.set_xlabel("RT Deadline Miss Fraction (%) [Lower is Better $\\rightarrow$]")
-    ax.set_ylabel("Background Goodput (Mbps) [Higher is Better $\\rightarrow$]")
-    ax.set_title("Multi-Objective Pareto Frontier: Timeliness vs. Bulk Goodput")
+    ax.set_xlabel(r"RT Deadline Miss Fraction (%) [Lower is Better $\rightarrow$]", fontsize=10.5)
+    ax.set_ylabel(r"Background Goodput (Mbps) [Higher is Better $\rightarrow$]", fontsize=10.5)
+    ax.set_title("Multi-Objective Pareto Frontier: Timeliness vs. Bulk Goodput", fontsize=11.5, fontweight="bold")
     ax.grid(True, linestyle="--", alpha=0.5)
-    ax.legend(loc="upper right", framealpha=0.95, edgecolor="#CBD5E1", fontsize=9.5)
     
-    # Annotate Pareto Optimal Region
-    ax.axhspan(11.0, 16.0, 0.0, 0.25, color="green", alpha=0.08)
-    ax.text(2, 11.5, "Optimal Operating Region\n(Low Miss + High Goodput)", color="green", fontsize=8.5, fontweight="bold")
+    # Place legend in lower right where no data points exist to prevent any occlusion
+    ax.legend(loc="lower right", framealpha=0.95, edgecolor="#CBD5E1", fontsize=9.2)
+    
+    # Annotate Pareto Optimal Region at the top of the shaded band, clear of all points
+    ax.set_ylim(7.0, 16.5)
+    ax.set_xlim(5.0, 104.0)
+    ax.axhspan(11.0, 16.2, 0.0, 0.28, color="#2E7D32", alpha=0.09)
+    ax.text(6.8, 15.9, "Optimal Operating Region\n(Low Miss + High Goodput)", color="#1B5E20", fontsize=8.5, fontweight="bold", va="top", ha="left")
 
     plt.tight_layout()
     fig.savefig(FIGS_DIR / "fig6_multimetric_pareto_frontier.pdf", bbox_inches="tight")
     fig.savefig(FIGS_DIR / "fig6_multimetric_pareto_frontier.png", dpi=300, bbox_inches="tight")
+    
+    # Also save to updated_submission/figures if directory exists
+    up_figs = ROOT_DIR / "updated_submission" / "figures"
+    if up_figs.exists():
+        fig.savefig(up_figs / "fig6_multimetric_pareto_frontier.pdf", bbox_inches="tight")
+        fig.savefig(up_figs / "fig6_multimetric_pareto_frontier.png", dpi=300, bbox_inches="tight")
+        
     plt.close(fig)
     print("Rendered fig6_multimetric_pareto_frontier")
 
